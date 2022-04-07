@@ -1,0 +1,80 @@
+# Maps a Time GraphQL scalar to a Go time.Time struct.
+scalar Time
+
+# Define an enumeration type and map it later to Ent enum (Go type).
+# https://graphql.org/learn/schema/#enumeration-types
+enum Status {
+    IN_PROGRESS
+    COMPLETED
+}
+
+# Define an object type and map it later to the generated Ent model.
+# https://graphql.org/learn/schema/#object-types-and-fields
+type Movie {
+    id: ID!
+    name: String!
+    rank: Int!
+    description: String!
+    director: String!
+    parent: Director
+}
+
+type Director {
+    id: ID!
+    name: String!
+    children: [Movie!]
+}
+
+type Review {
+    id: ID!
+    text: String!
+    rank: Int!
+}
+
+type User {
+    id: ID!
+    firstname: String!
+    lastname: String!
+    nickname: String!
+    description: String!
+    password: String!
+    email: String!
+    birthday: String!
+}
+
+
+# These enums are matched the entgql annotations in the ent/schema.
+enum MovieOrderField {
+    MOVIE_NAME
+    MOVIE_DESCRIPTION
+    MOVIE_RANK
+}
+
+enum DirectorOrderField {
+    DIRECTOR_NAME
+}
+
+enum UserOrderField {
+    NICKNAME
+}
+
+# Define an input type for the mutation below.
+# https://graphql.org/learn/schema/#input-types
+input MovieInput {
+    director: String!
+    description: String!
+    name: String!
+    rank: Int!
+    parent: ID
+}
+
+# Define a mutation for creating todos.
+# https://graphql.org/learn/queries/#mutations
+type Mutation {
+    createMovie(movie: MovieInput!): Movie!
+}
+
+# Define a query for getting all movies.
+type Query {
+    movies: [Movie!]
+}
