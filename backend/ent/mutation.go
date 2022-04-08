@@ -448,9 +448,9 @@ type MovieMutation struct {
 	clearedFields   map[string]struct{}
 	director        *int
 	cleareddirector bool
-	review          map[int]struct{}
-	removedreview   map[int]struct{}
-	clearedreview   bool
+	reviews         map[int]struct{}
+	removedreviews  map[int]struct{}
+	clearedreviews  bool
 	done            bool
 	oldValue        func(context.Context) (*Movie, error)
 	predicates      []predicate.Movie
@@ -721,58 +721,58 @@ func (m *MovieMutation) ResetDirector() {
 	m.cleareddirector = false
 }
 
-// AddReviewIDs adds the "review" edge to the Review entity by ids.
+// AddReviewIDs adds the "reviews" edge to the Review entity by ids.
 func (m *MovieMutation) AddReviewIDs(ids ...int) {
-	if m.review == nil {
-		m.review = make(map[int]struct{})
+	if m.reviews == nil {
+		m.reviews = make(map[int]struct{})
 	}
 	for i := range ids {
-		m.review[ids[i]] = struct{}{}
+		m.reviews[ids[i]] = struct{}{}
 	}
 }
 
-// ClearReview clears the "review" edge to the Review entity.
-func (m *MovieMutation) ClearReview() {
-	m.clearedreview = true
+// ClearReviews clears the "reviews" edge to the Review entity.
+func (m *MovieMutation) ClearReviews() {
+	m.clearedreviews = true
 }
 
-// ReviewCleared reports if the "review" edge to the Review entity was cleared.
-func (m *MovieMutation) ReviewCleared() bool {
-	return m.clearedreview
+// ReviewsCleared reports if the "reviews" edge to the Review entity was cleared.
+func (m *MovieMutation) ReviewsCleared() bool {
+	return m.clearedreviews
 }
 
-// RemoveReviewIDs removes the "review" edge to the Review entity by IDs.
+// RemoveReviewIDs removes the "reviews" edge to the Review entity by IDs.
 func (m *MovieMutation) RemoveReviewIDs(ids ...int) {
-	if m.removedreview == nil {
-		m.removedreview = make(map[int]struct{})
+	if m.removedreviews == nil {
+		m.removedreviews = make(map[int]struct{})
 	}
 	for i := range ids {
-		delete(m.review, ids[i])
-		m.removedreview[ids[i]] = struct{}{}
+		delete(m.reviews, ids[i])
+		m.removedreviews[ids[i]] = struct{}{}
 	}
 }
 
-// RemovedReview returns the removed IDs of the "review" edge to the Review entity.
-func (m *MovieMutation) RemovedReviewIDs() (ids []int) {
-	for id := range m.removedreview {
+// RemovedReviews returns the removed IDs of the "reviews" edge to the Review entity.
+func (m *MovieMutation) RemovedReviewsIDs() (ids []int) {
+	for id := range m.removedreviews {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// ReviewIDs returns the "review" edge IDs in the mutation.
-func (m *MovieMutation) ReviewIDs() (ids []int) {
-	for id := range m.review {
+// ReviewsIDs returns the "reviews" edge IDs in the mutation.
+func (m *MovieMutation) ReviewsIDs() (ids []int) {
+	for id := range m.reviews {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// ResetReview resets all changes to the "review" edge.
-func (m *MovieMutation) ResetReview() {
-	m.review = nil
-	m.clearedreview = false
-	m.removedreview = nil
+// ResetReviews resets all changes to the "reviews" edge.
+func (m *MovieMutation) ResetReviews() {
+	m.reviews = nil
+	m.clearedreviews = false
+	m.removedreviews = nil
 }
 
 // Where appends a list predicates to the MovieMutation builder.
@@ -946,8 +946,8 @@ func (m *MovieMutation) AddedEdges() []string {
 	if m.director != nil {
 		edges = append(edges, movie.EdgeDirector)
 	}
-	if m.review != nil {
-		edges = append(edges, movie.EdgeReview)
+	if m.reviews != nil {
+		edges = append(edges, movie.EdgeReviews)
 	}
 	return edges
 }
@@ -960,9 +960,9 @@ func (m *MovieMutation) AddedIDs(name string) []ent.Value {
 		if id := m.director; id != nil {
 			return []ent.Value{*id}
 		}
-	case movie.EdgeReview:
-		ids := make([]ent.Value, 0, len(m.review))
-		for id := range m.review {
+	case movie.EdgeReviews:
+		ids := make([]ent.Value, 0, len(m.reviews))
+		for id := range m.reviews {
 			ids = append(ids, id)
 		}
 		return ids
@@ -973,8 +973,8 @@ func (m *MovieMutation) AddedIDs(name string) []ent.Value {
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *MovieMutation) RemovedEdges() []string {
 	edges := make([]string, 0, 2)
-	if m.removedreview != nil {
-		edges = append(edges, movie.EdgeReview)
+	if m.removedreviews != nil {
+		edges = append(edges, movie.EdgeReviews)
 	}
 	return edges
 }
@@ -983,9 +983,9 @@ func (m *MovieMutation) RemovedEdges() []string {
 // the given name in this mutation.
 func (m *MovieMutation) RemovedIDs(name string) []ent.Value {
 	switch name {
-	case movie.EdgeReview:
-		ids := make([]ent.Value, 0, len(m.removedreview))
-		for id := range m.removedreview {
+	case movie.EdgeReviews:
+		ids := make([]ent.Value, 0, len(m.removedreviews))
+		for id := range m.removedreviews {
 			ids = append(ids, id)
 		}
 		return ids
@@ -999,8 +999,8 @@ func (m *MovieMutation) ClearedEdges() []string {
 	if m.cleareddirector {
 		edges = append(edges, movie.EdgeDirector)
 	}
-	if m.clearedreview {
-		edges = append(edges, movie.EdgeReview)
+	if m.clearedreviews {
+		edges = append(edges, movie.EdgeReviews)
 	}
 	return edges
 }
@@ -1011,8 +1011,8 @@ func (m *MovieMutation) EdgeCleared(name string) bool {
 	switch name {
 	case movie.EdgeDirector:
 		return m.cleareddirector
-	case movie.EdgeReview:
-		return m.clearedreview
+	case movie.EdgeReviews:
+		return m.clearedreviews
 	}
 	return false
 }
@@ -1035,8 +1035,8 @@ func (m *MovieMutation) ResetEdge(name string) error {
 	case movie.EdgeDirector:
 		m.ResetDirector()
 		return nil
-	case movie.EdgeReview:
-		m.ResetReview()
+	case movie.EdgeReviews:
+		m.ResetReviews()
 		return nil
 	}
 	return fmt.Errorf("unknown Movie edge %s", name)
@@ -1052,11 +1052,9 @@ type ReviewMutation struct {
 	rank          *int
 	addrank       *int
 	clearedFields map[string]struct{}
-	movies        map[int]struct{}
-	removedmovies map[int]struct{}
-	clearedmovies bool
-	user          map[int]struct{}
-	removeduser   map[int]struct{}
+	movie         *int
+	clearedmovie  bool
+	user          *int
 	cleareduser   bool
 	done          bool
 	oldValue      func(context.Context) (*Review, error)
@@ -1253,68 +1251,48 @@ func (m *ReviewMutation) ResetRank() {
 	m.addrank = nil
 }
 
-// AddMovieIDs adds the "movies" edge to the Movie entity by ids.
-func (m *ReviewMutation) AddMovieIDs(ids ...int) {
-	if m.movies == nil {
-		m.movies = make(map[int]struct{})
-	}
-	for i := range ids {
-		m.movies[ids[i]] = struct{}{}
-	}
+// SetMovieID sets the "movie" edge to the Movie entity by id.
+func (m *ReviewMutation) SetMovieID(id int) {
+	m.movie = &id
 }
 
-// ClearMovies clears the "movies" edge to the Movie entity.
-func (m *ReviewMutation) ClearMovies() {
-	m.clearedmovies = true
+// ClearMovie clears the "movie" edge to the Movie entity.
+func (m *ReviewMutation) ClearMovie() {
+	m.clearedmovie = true
 }
 
-// MoviesCleared reports if the "movies" edge to the Movie entity was cleared.
-func (m *ReviewMutation) MoviesCleared() bool {
-	return m.clearedmovies
+// MovieCleared reports if the "movie" edge to the Movie entity was cleared.
+func (m *ReviewMutation) MovieCleared() bool {
+	return m.clearedmovie
 }
 
-// RemoveMovieIDs removes the "movies" edge to the Movie entity by IDs.
-func (m *ReviewMutation) RemoveMovieIDs(ids ...int) {
-	if m.removedmovies == nil {
-		m.removedmovies = make(map[int]struct{})
-	}
-	for i := range ids {
-		delete(m.movies, ids[i])
-		m.removedmovies[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedMovies returns the removed IDs of the "movies" edge to the Movie entity.
-func (m *ReviewMutation) RemovedMoviesIDs() (ids []int) {
-	for id := range m.removedmovies {
-		ids = append(ids, id)
+// MovieID returns the "movie" edge ID in the mutation.
+func (m *ReviewMutation) MovieID() (id int, exists bool) {
+	if m.movie != nil {
+		return *m.movie, true
 	}
 	return
 }
 
-// MoviesIDs returns the "movies" edge IDs in the mutation.
-func (m *ReviewMutation) MoviesIDs() (ids []int) {
-	for id := range m.movies {
-		ids = append(ids, id)
+// MovieIDs returns the "movie" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// MovieID instead. It exists only for internal usage by the builders.
+func (m *ReviewMutation) MovieIDs() (ids []int) {
+	if id := m.movie; id != nil {
+		ids = append(ids, *id)
 	}
 	return
 }
 
-// ResetMovies resets all changes to the "movies" edge.
-func (m *ReviewMutation) ResetMovies() {
-	m.movies = nil
-	m.clearedmovies = false
-	m.removedmovies = nil
+// ResetMovie resets all changes to the "movie" edge.
+func (m *ReviewMutation) ResetMovie() {
+	m.movie = nil
+	m.clearedmovie = false
 }
 
-// AddUserIDs adds the "user" edge to the User entity by ids.
-func (m *ReviewMutation) AddUserIDs(ids ...int) {
-	if m.user == nil {
-		m.user = make(map[int]struct{})
-	}
-	for i := range ids {
-		m.user[ids[i]] = struct{}{}
-	}
+// SetUserID sets the "user" edge to the User entity by id.
+func (m *ReviewMutation) SetUserID(id int) {
+	m.user = &id
 }
 
 // ClearUser clears the "user" edge to the User entity.
@@ -1327,29 +1305,20 @@ func (m *ReviewMutation) UserCleared() bool {
 	return m.cleareduser
 }
 
-// RemoveUserIDs removes the "user" edge to the User entity by IDs.
-func (m *ReviewMutation) RemoveUserIDs(ids ...int) {
-	if m.removeduser == nil {
-		m.removeduser = make(map[int]struct{})
-	}
-	for i := range ids {
-		delete(m.user, ids[i])
-		m.removeduser[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedUser returns the removed IDs of the "user" edge to the User entity.
-func (m *ReviewMutation) RemovedUserIDs() (ids []int) {
-	for id := range m.removeduser {
-		ids = append(ids, id)
+// UserID returns the "user" edge ID in the mutation.
+func (m *ReviewMutation) UserID() (id int, exists bool) {
+	if m.user != nil {
+		return *m.user, true
 	}
 	return
 }
 
 // UserIDs returns the "user" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// UserID instead. It exists only for internal usage by the builders.
 func (m *ReviewMutation) UserIDs() (ids []int) {
-	for id := range m.user {
-		ids = append(ids, id)
+	if id := m.user; id != nil {
+		ids = append(ids, *id)
 	}
 	return
 }
@@ -1358,7 +1327,6 @@ func (m *ReviewMutation) UserIDs() (ids []int) {
 func (m *ReviewMutation) ResetUser() {
 	m.user = nil
 	m.cleareduser = false
-	m.removeduser = nil
 }
 
 // Where appends a list predicates to the ReviewMutation builder.
@@ -1512,8 +1480,8 @@ func (m *ReviewMutation) ResetField(name string) error {
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *ReviewMutation) AddedEdges() []string {
 	edges := make([]string, 0, 2)
-	if m.movies != nil {
-		edges = append(edges, review.EdgeMovies)
+	if m.movie != nil {
+		edges = append(edges, review.EdgeMovie)
 	}
 	if m.user != nil {
 		edges = append(edges, review.EdgeUser)
@@ -1525,18 +1493,14 @@ func (m *ReviewMutation) AddedEdges() []string {
 // name in this mutation.
 func (m *ReviewMutation) AddedIDs(name string) []ent.Value {
 	switch name {
-	case review.EdgeMovies:
-		ids := make([]ent.Value, 0, len(m.movies))
-		for id := range m.movies {
-			ids = append(ids, id)
+	case review.EdgeMovie:
+		if id := m.movie; id != nil {
+			return []ent.Value{*id}
 		}
-		return ids
 	case review.EdgeUser:
-		ids := make([]ent.Value, 0, len(m.user))
-		for id := range m.user {
-			ids = append(ids, id)
+		if id := m.user; id != nil {
+			return []ent.Value{*id}
 		}
-		return ids
 	}
 	return nil
 }
@@ -1544,12 +1508,6 @@ func (m *ReviewMutation) AddedIDs(name string) []ent.Value {
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *ReviewMutation) RemovedEdges() []string {
 	edges := make([]string, 0, 2)
-	if m.removedmovies != nil {
-		edges = append(edges, review.EdgeMovies)
-	}
-	if m.removeduser != nil {
-		edges = append(edges, review.EdgeUser)
-	}
 	return edges
 }
 
@@ -1557,18 +1515,6 @@ func (m *ReviewMutation) RemovedEdges() []string {
 // the given name in this mutation.
 func (m *ReviewMutation) RemovedIDs(name string) []ent.Value {
 	switch name {
-	case review.EdgeMovies:
-		ids := make([]ent.Value, 0, len(m.removedmovies))
-		for id := range m.removedmovies {
-			ids = append(ids, id)
-		}
-		return ids
-	case review.EdgeUser:
-		ids := make([]ent.Value, 0, len(m.removeduser))
-		for id := range m.removeduser {
-			ids = append(ids, id)
-		}
-		return ids
 	}
 	return nil
 }
@@ -1576,8 +1522,8 @@ func (m *ReviewMutation) RemovedIDs(name string) []ent.Value {
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *ReviewMutation) ClearedEdges() []string {
 	edges := make([]string, 0, 2)
-	if m.clearedmovies {
-		edges = append(edges, review.EdgeMovies)
+	if m.clearedmovie {
+		edges = append(edges, review.EdgeMovie)
 	}
 	if m.cleareduser {
 		edges = append(edges, review.EdgeUser)
@@ -1589,8 +1535,8 @@ func (m *ReviewMutation) ClearedEdges() []string {
 // was cleared in this mutation.
 func (m *ReviewMutation) EdgeCleared(name string) bool {
 	switch name {
-	case review.EdgeMovies:
-		return m.clearedmovies
+	case review.EdgeMovie:
+		return m.clearedmovie
 	case review.EdgeUser:
 		return m.cleareduser
 	}
@@ -1601,6 +1547,12 @@ func (m *ReviewMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *ReviewMutation) ClearEdge(name string) error {
 	switch name {
+	case review.EdgeMovie:
+		m.ClearMovie()
+		return nil
+	case review.EdgeUser:
+		m.ClearUser()
+		return nil
 	}
 	return fmt.Errorf("unknown Review unique edge %s", name)
 }
@@ -1609,8 +1561,8 @@ func (m *ReviewMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *ReviewMutation) ResetEdge(name string) error {
 	switch name {
-	case review.EdgeMovies:
-		m.ResetMovies()
+	case review.EdgeMovie:
+		m.ResetMovie()
 		return nil
 	case review.EdgeUser:
 		m.ResetUser()

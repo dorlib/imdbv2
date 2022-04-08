@@ -2,10 +2,28 @@
 
 package graphql
 
+type DirectorInput struct {
+	Name string `json:"name"`
+}
+
 type MovieInput struct {
-	Director    string `json:"director"`
 	Description string `json:"description"`
 	Name        string `json:"name"`
 	Rank        int    `json:"rank"`
 	Parent      *int   `json:"parent"`
+}
+
+type ReviewInput struct {
+	Text string `json:"text"`
+	Rank int    `json:"rank"`
+}
+
+type UserInput struct {
+	Firstname   string `json:"firstname"`
+	Lastname    string `json:"lastname"`
+	Nickname    string `json:"nickname"`
+	Description string `json:"description"`
+	Password    string `json:"password"`
+	Email       string `json:"email"`
+	Birthday    string `json:"birthday"`
 }

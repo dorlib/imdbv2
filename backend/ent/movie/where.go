@@ -439,25 +439,25 @@ func HasDirectorWith(preds ...predicate.Director) predicate.Movie {
 	})
 }
 
-// HasReview applies the HasEdge predicate on the "review" edge.
-func HasReview() predicate.Movie {
+// HasReviews applies the HasEdge predicate on the "reviews" edge.
+func HasReviews() predicate.Movie {
 	return predicate.Movie(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(ReviewTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, ReviewTable, ReviewPrimaryKey...),
+			sqlgraph.To(ReviewsTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, true, ReviewsTable, ReviewsColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasReviewWith applies the HasEdge predicate on the "review" edge with a given conditions (other predicates).
-func HasReviewWith(preds ...predicate.Review) predicate.Movie {
+// HasReviewsWith applies the HasEdge predicate on the "reviews" edge with a given conditions (other predicates).
+func HasReviewsWith(preds ...predicate.Review) predicate.Movie {
 	return predicate.Movie(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(ReviewInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, ReviewTable, ReviewPrimaryKey...),
+			sqlgraph.To(ReviewsInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, true, ReviewsTable, ReviewsColumn),
 		)
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {

@@ -122,9 +122,9 @@ func (m *Movie) Node(ctx context.Context) (node *Node, err error) {
 	}
 	node.Edges[1] = &Edge{
 		Type: "Review",
-		Name: "review",
+		Name: "reviews",
 	}
-	err = m.QueryReview().
+	err = m.QueryReviews().
 		Select(review.FieldID).
 		Scan(ctx, &node.Edges[1].IDs)
 	if err != nil {
@@ -159,9 +159,9 @@ func (r *Review) Node(ctx context.Context) (node *Node, err error) {
 	}
 	node.Edges[0] = &Edge{
 		Type: "Movie",
-		Name: "movies",
+		Name: "movie",
 	}
-	err = r.QueryMovies().
+	err = r.QueryMovie().
 		Select(movie.FieldID).
 		Scan(ctx, &node.Edges[0].IDs)
 	if err != nil {

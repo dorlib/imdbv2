@@ -29,7 +29,7 @@ type MovieQuery struct {
 	predicates []predicate.Movie
 	// eager-loading edges.
 	withDirector *DirectorQuery
-	withReview   *ReviewQuery
+	withReviews  *ReviewQuery
 	withFKs      bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -89,8 +89,8 @@ func (mq *MovieQuery) QueryDirector() *DirectorQuery {
 	return query
 }
 
-// QueryReview chains the current query on the "review" edge.
-func (mq *MovieQuery) QueryReview() *ReviewQuery {
+// QueryReviews chains the current query on the "reviews" edge.
+func (mq *MovieQuery) QueryReviews() *ReviewQuery {
 	query := &ReviewQuery{config: mq.config}
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := mq.prepareQuery(ctx); err != nil {
@@ -103,7 +103,7 @@ func (mq *MovieQuery) QueryReview() *ReviewQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(movie.Table, movie.FieldID, selector),
 			sqlgraph.To(review.Table, review.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, movie.ReviewTable, movie.ReviewPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, true, movie.ReviewsTable, movie.ReviewsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(mq.driver.Dialect(), step)
 		return fromU, nil
@@ -293,7 +293,7 @@ func (mq *MovieQuery) Clone() *MovieQuery {
 		order:        append([]OrderFunc{}, mq.order...),
 		predicates:   append([]predicate.Movie{}, mq.predicates...),
 		withDirector: mq.withDirector.Clone(),
-		withReview:   mq.withReview.Clone(),
+		withReviews:  mq.withReviews.Clone(),
 		// clone intermediate query.
 		sql:    mq.sql.Clone(),
 		path:   mq.path,
@@ -312,14 +312,14 @@ func (mq *MovieQuery) WithDirector(opts ...func(*DirectorQuery)) *MovieQuery {
 	return mq
 }
 
-// WithReview tells the query-builder to eager-load the nodes that are connected to
-// the "review" edge. The optional arguments are used to configure the query builder of the edge.
-func (mq *MovieQuery) WithReview(opts ...func(*ReviewQuery)) *MovieQuery {
+// WithReviews tells the query-builder to eager-load the nodes that are connected to
+// the "reviews" edge. The optional arguments are used to configure the query builder of the edge.
+func (mq *MovieQuery) WithReviews(opts ...func(*ReviewQuery)) *MovieQuery {
 	query := &ReviewQuery{config: mq.config}
 	for _, opt := range opts {
 		opt(query)
 	}
-	mq.withReview = query
+	mq.withReviews = query
 	return mq
 }
 
@@ -391,7 +391,7 @@ func (mq *MovieQuery) sqlAll(ctx context.Context) ([]*Movie, error) {
 		_spec       = mq.querySpec()
 		loadedTypes = [2]bool{
 			mq.withDirector != nil,
-			mq.withReview != nil,
+			mq.withReviews != nil,
 		}
 	)
 	if mq.withDirector != nil {
@@ -449,68 +449,32 @@ func (mq *MovieQuery) sqlAll(ctx context.Context) ([]*Movie, error) {
 		}
 	}
 
-	if query := mq.withReview; query != nil {
+	if query := mq.withReviews; query != nil {
 		fks := make([]driver.Value, 0, len(nodes))
-		ids := make(map[int]*Movie, len(nodes))
-		for _, node := range nodes {
-			ids[node.ID] = node
-			fks = append(fks, node.ID)
-			node.Edges.Review = []*Review{}
+		nodeids := make(map[int]*Movie)
+		for i := range nodes {
+			fks = append(fks, nodes[i].ID)
+			nodeids[nodes[i].ID] = nodes[i]
+			nodes[i].Edges.Reviews = []*Review{}
 		}
-		var (
-			edgeids []int
-			edges   = make(map[int][]*Movie)
-		)
-		_spec := &sqlgraph.EdgeQuerySpec{
-			Edge: &sqlgraph.EdgeSpec{
-				Inverse: true,
-				Table:   movie.ReviewTable,
-				Columns: movie.ReviewPrimaryKey,
-			},
-			Predicate: func(s *sql.Selector) {
-				s.Where(sql.InValues(movie.ReviewPrimaryKey[1], fks...))
-			},
-			ScanValues: func() [2]interface{} {
-				return [2]interface{}{new(sql.NullInt64), new(sql.NullInt64)}
-			},
-			Assign: func(out, in interface{}) error {
-				eout, ok := out.(*sql.NullInt64)
-				if !ok || eout == nil {
-					return fmt.Errorf("unexpected id value for edge-out")
-				}
-				ein, ok := in.(*sql.NullInt64)
-				if !ok || ein == nil {
-					return fmt.Errorf("unexpected id value for edge-in")
-				}
-				outValue := int(eout.Int64)
-				inValue := int(ein.Int64)
-				node, ok := ids[outValue]
-				if !ok {
-					return fmt.Errorf("unexpected node id in edges: %v", outValue)
-				}
-				if _, ok := edges[inValue]; !ok {
-					edgeids = append(edgeids, inValue)
-				}
-				edges[inValue] = append(edges[inValue], node)
-				return nil
-			},
-		}
-		if err := sqlgraph.QueryEdges(ctx, mq.driver, _spec); err != nil {
-			return nil, fmt.Errorf(`query edges "review": %w`, err)
-		}
-		query.Where(review.IDIn(edgeids...))
+		query.withFKs = true
+		query.Where(predicate.Review(func(s *sql.Selector) {
+			s.Where(sql.InValues(movie.ReviewsColumn, fks...))
+		}))
 		neighbors, err := query.All(ctx)
 		if err != nil {
 			return nil, err
 		}
 		for _, n := range neighbors {
-			nodes, ok := edges[n.ID]
+			fk := n.review_movie
+			if fk == nil {
+				return nil, fmt.Errorf(`foreign-key "review_movie" is nil for node %v`, n.ID)
+			}
+			node, ok := nodeids[*fk]
 			if !ok {
-				return nil, fmt.Errorf(`unexpected "review" node returned %v`, n.ID)
+				return nil, fmt.Errorf(`unexpected foreign-key "review_movie" returned %v for node %v`, *fk, n.ID)
 			}
-			for i := range nodes {
-				nodes[i].Edges.Review = append(nodes[i].Edges.Review, n)
-			}
+			node.Edges.Reviews = append(node.Edges.Reviews, n)
 		}
 	}
 

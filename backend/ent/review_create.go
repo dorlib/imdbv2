@@ -33,34 +33,42 @@ func (rc *ReviewCreate) SetRank(i int) *ReviewCreate {
 	return rc
 }
 
-// AddMovieIDs adds the "movies" edge to the Movie entity by IDs.
-func (rc *ReviewCreate) AddMovieIDs(ids ...int) *ReviewCreate {
-	rc.mutation.AddMovieIDs(ids...)
+// SetMovieID sets the "movie" edge to the Movie entity by ID.
+func (rc *ReviewCreate) SetMovieID(id int) *ReviewCreate {
+	rc.mutation.SetMovieID(id)
 	return rc
 }
 
-// AddMovies adds the "movies" edges to the Movie entity.
-func (rc *ReviewCreate) AddMovies(m ...*Movie) *ReviewCreate {
-	ids := make([]int, len(m))
-	for i := range m {
-		ids[i] = m[i].ID
+// SetNillableMovieID sets the "movie" edge to the Movie entity by ID if the given value is not nil.
+func (rc *ReviewCreate) SetNillableMovieID(id *int) *ReviewCreate {
+	if id != nil {
+		rc = rc.SetMovieID(*id)
 	}
-	return rc.AddMovieIDs(ids...)
-}
-
-// AddUserIDs adds the "user" edge to the User entity by IDs.
-func (rc *ReviewCreate) AddUserIDs(ids ...int) *ReviewCreate {
-	rc.mutation.AddUserIDs(ids...)
 	return rc
 }
 
-// AddUser adds the "user" edges to the User entity.
-func (rc *ReviewCreate) AddUser(u ...*User) *ReviewCreate {
-	ids := make([]int, len(u))
-	for i := range u {
-		ids[i] = u[i].ID
+// SetMovie sets the "movie" edge to the Movie entity.
+func (rc *ReviewCreate) SetMovie(m *Movie) *ReviewCreate {
+	return rc.SetMovieID(m.ID)
+}
+
+// SetUserID sets the "user" edge to the User entity by ID.
+func (rc *ReviewCreate) SetUserID(id int) *ReviewCreate {
+	rc.mutation.SetUserID(id)
+	return rc
+}
+
+// SetNillableUserID sets the "user" edge to the User entity by ID if the given value is not nil.
+func (rc *ReviewCreate) SetNillableUserID(id *int) *ReviewCreate {
+	if id != nil {
+		rc = rc.SetUserID(*id)
 	}
-	return rc.AddUserIDs(ids...)
+	return rc
+}
+
+// SetUser sets the "user" edge to the User entity.
+func (rc *ReviewCreate) SetUser(u *User) *ReviewCreate {
+	return rc.SetUserID(u.ID)
 }
 
 // Mutation returns the ReviewMutation object of the builder.
@@ -182,12 +190,12 @@ func (rc *ReviewCreate) createSpec() (*Review, *sqlgraph.CreateSpec) {
 		})
 		_node.Rank = value
 	}
-	if nodes := rc.mutation.MoviesIDs(); len(nodes) > 0 {
+	if nodes := rc.mutation.MovieIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   review.MoviesTable,
-			Columns: review.MoviesPrimaryKey,
+			Table:   review.MovieTable,
+			Columns: []string{review.MovieColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -199,14 +207,15 @@ func (rc *ReviewCreate) createSpec() (*Review, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_node.review_movie = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := rc.mutation.UserIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: true,
 			Table:   review.UserTable,
-			Columns: review.UserPrimaryKey,
+			Columns: []string{review.UserColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -218,6 +227,7 @@ func (rc *ReviewCreate) createSpec() (*Review, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_node.user_reviews = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

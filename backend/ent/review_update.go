@@ -48,34 +48,42 @@ func (ru *ReviewUpdate) AddRank(i int) *ReviewUpdate {
 	return ru
 }
 
-// AddMovieIDs adds the "movies" edge to the Movie entity by IDs.
-func (ru *ReviewUpdate) AddMovieIDs(ids ...int) *ReviewUpdate {
-	ru.mutation.AddMovieIDs(ids...)
+// SetMovieID sets the "movie" edge to the Movie entity by ID.
+func (ru *ReviewUpdate) SetMovieID(id int) *ReviewUpdate {
+	ru.mutation.SetMovieID(id)
 	return ru
 }
 
-// AddMovies adds the "movies" edges to the Movie entity.
-func (ru *ReviewUpdate) AddMovies(m ...*Movie) *ReviewUpdate {
-	ids := make([]int, len(m))
-	for i := range m {
-		ids[i] = m[i].ID
+// SetNillableMovieID sets the "movie" edge to the Movie entity by ID if the given value is not nil.
+func (ru *ReviewUpdate) SetNillableMovieID(id *int) *ReviewUpdate {
+	if id != nil {
+		ru = ru.SetMovieID(*id)
 	}
-	return ru.AddMovieIDs(ids...)
-}
-
-// AddUserIDs adds the "user" edge to the User entity by IDs.
-func (ru *ReviewUpdate) AddUserIDs(ids ...int) *ReviewUpdate {
-	ru.mutation.AddUserIDs(ids...)
 	return ru
 }
 
-// AddUser adds the "user" edges to the User entity.
-func (ru *ReviewUpdate) AddUser(u ...*User) *ReviewUpdate {
-	ids := make([]int, len(u))
-	for i := range u {
-		ids[i] = u[i].ID
+// SetMovie sets the "movie" edge to the Movie entity.
+func (ru *ReviewUpdate) SetMovie(m *Movie) *ReviewUpdate {
+	return ru.SetMovieID(m.ID)
+}
+
+// SetUserID sets the "user" edge to the User entity by ID.
+func (ru *ReviewUpdate) SetUserID(id int) *ReviewUpdate {
+	ru.mutation.SetUserID(id)
+	return ru
+}
+
+// SetNillableUserID sets the "user" edge to the User entity by ID if the given value is not nil.
+func (ru *ReviewUpdate) SetNillableUserID(id *int) *ReviewUpdate {
+	if id != nil {
+		ru = ru.SetUserID(*id)
 	}
-	return ru.AddUserIDs(ids...)
+	return ru
+}
+
+// SetUser sets the "user" edge to the User entity.
+func (ru *ReviewUpdate) SetUser(u *User) *ReviewUpdate {
+	return ru.SetUserID(u.ID)
 }
 
 // Mutation returns the ReviewMutation object of the builder.
@@ -83,46 +91,16 @@ func (ru *ReviewUpdate) Mutation() *ReviewMutation {
 	return ru.mutation
 }
 
-// ClearMovies clears all "movies" edges to the Movie entity.
-func (ru *ReviewUpdate) ClearMovies() *ReviewUpdate {
-	ru.mutation.ClearMovies()
+// ClearMovie clears the "movie" edge to the Movie entity.
+func (ru *ReviewUpdate) ClearMovie() *ReviewUpdate {
+	ru.mutation.ClearMovie()
 	return ru
 }
 
-// RemoveMovieIDs removes the "movies" edge to Movie entities by IDs.
-func (ru *ReviewUpdate) RemoveMovieIDs(ids ...int) *ReviewUpdate {
-	ru.mutation.RemoveMovieIDs(ids...)
-	return ru
-}
-
-// RemoveMovies removes "movies" edges to Movie entities.
-func (ru *ReviewUpdate) RemoveMovies(m ...*Movie) *ReviewUpdate {
-	ids := make([]int, len(m))
-	for i := range m {
-		ids[i] = m[i].ID
-	}
-	return ru.RemoveMovieIDs(ids...)
-}
-
-// ClearUser clears all "user" edges to the User entity.
+// ClearUser clears the "user" edge to the User entity.
 func (ru *ReviewUpdate) ClearUser() *ReviewUpdate {
 	ru.mutation.ClearUser()
 	return ru
-}
-
-// RemoveUserIDs removes the "user" edge to User entities by IDs.
-func (ru *ReviewUpdate) RemoveUserIDs(ids ...int) *ReviewUpdate {
-	ru.mutation.RemoveUserIDs(ids...)
-	return ru
-}
-
-// RemoveUser removes "user" edges to User entities.
-func (ru *ReviewUpdate) RemoveUser(u ...*User) *ReviewUpdate {
-	ids := make([]int, len(u))
-	for i := range u {
-		ids[i] = u[i].ID
-	}
-	return ru.RemoveUserIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -218,12 +196,12 @@ func (ru *ReviewUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: review.FieldRank,
 		})
 	}
-	if ru.mutation.MoviesCleared() {
+	if ru.mutation.MovieCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   review.MoviesTable,
-			Columns: review.MoviesPrimaryKey,
+			Table:   review.MovieTable,
+			Columns: []string{review.MovieColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -234,31 +212,12 @@ func (ru *ReviewUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := ru.mutation.RemovedMoviesIDs(); len(nodes) > 0 && !ru.mutation.MoviesCleared() {
+	if nodes := ru.mutation.MovieIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   review.MoviesTable,
-			Columns: review.MoviesPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: movie.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ru.mutation.MoviesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   review.MoviesTable,
-			Columns: review.MoviesPrimaryKey,
+			Table:   review.MovieTable,
+			Columns: []string{review.MovieColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -274,10 +233,10 @@ func (ru *ReviewUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if ru.mutation.UserCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: true,
 			Table:   review.UserTable,
-			Columns: review.UserPrimaryKey,
+			Columns: []string{review.UserColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -285,34 +244,15 @@ func (ru *ReviewUpdate) sqlSave(ctx context.Context) (n int, err error) {
 					Column: user.FieldID,
 				},
 			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ru.mutation.RemovedUserIDs(); len(nodes) > 0 && !ru.mutation.UserCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   review.UserTable,
-			Columns: review.UserPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: user.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := ru.mutation.UserIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: true,
 			Table:   review.UserTable,
-			Columns: review.UserPrimaryKey,
+			Columns: []string{review.UserColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -364,34 +304,42 @@ func (ruo *ReviewUpdateOne) AddRank(i int) *ReviewUpdateOne {
 	return ruo
 }
 
-// AddMovieIDs adds the "movies" edge to the Movie entity by IDs.
-func (ruo *ReviewUpdateOne) AddMovieIDs(ids ...int) *ReviewUpdateOne {
-	ruo.mutation.AddMovieIDs(ids...)
+// SetMovieID sets the "movie" edge to the Movie entity by ID.
+func (ruo *ReviewUpdateOne) SetMovieID(id int) *ReviewUpdateOne {
+	ruo.mutation.SetMovieID(id)
 	return ruo
 }
 
-// AddMovies adds the "movies" edges to the Movie entity.
-func (ruo *ReviewUpdateOne) AddMovies(m ...*Movie) *ReviewUpdateOne {
-	ids := make([]int, len(m))
-	for i := range m {
-		ids[i] = m[i].ID
+// SetNillableMovieID sets the "movie" edge to the Movie entity by ID if the given value is not nil.
+func (ruo *ReviewUpdateOne) SetNillableMovieID(id *int) *ReviewUpdateOne {
+	if id != nil {
+		ruo = ruo.SetMovieID(*id)
 	}
-	return ruo.AddMovieIDs(ids...)
-}
-
-// AddUserIDs adds the "user" edge to the User entity by IDs.
-func (ruo *ReviewUpdateOne) AddUserIDs(ids ...int) *ReviewUpdateOne {
-	ruo.mutation.AddUserIDs(ids...)
 	return ruo
 }
 
-// AddUser adds the "user" edges to the User entity.
-func (ruo *ReviewUpdateOne) AddUser(u ...*User) *ReviewUpdateOne {
-	ids := make([]int, len(u))
-	for i := range u {
-		ids[i] = u[i].ID
+// SetMovie sets the "movie" edge to the Movie entity.
+func (ruo *ReviewUpdateOne) SetMovie(m *Movie) *ReviewUpdateOne {
+	return ruo.SetMovieID(m.ID)
+}
+
+// SetUserID sets the "user" edge to the User entity by ID.
+func (ruo *ReviewUpdateOne) SetUserID(id int) *ReviewUpdateOne {
+	ruo.mutation.SetUserID(id)
+	return ruo
+}
+
+// SetNillableUserID sets the "user" edge to the User entity by ID if the given value is not nil.
+func (ruo *ReviewUpdateOne) SetNillableUserID(id *int) *ReviewUpdateOne {
+	if id != nil {
+		ruo = ruo.SetUserID(*id)
 	}
-	return ruo.AddUserIDs(ids...)
+	return ruo
+}
+
+// SetUser sets the "user" edge to the User entity.
+func (ruo *ReviewUpdateOne) SetUser(u *User) *ReviewUpdateOne {
+	return ruo.SetUserID(u.ID)
 }
 
 // Mutation returns the ReviewMutation object of the builder.
@@ -399,46 +347,16 @@ func (ruo *ReviewUpdateOne) Mutation() *ReviewMutation {
 	return ruo.mutation
 }
 
-// ClearMovies clears all "movies" edges to the Movie entity.
-func (ruo *ReviewUpdateOne) ClearMovies() *ReviewUpdateOne {
-	ruo.mutation.ClearMovies()
+// ClearMovie clears the "movie" edge to the Movie entity.
+func (ruo *ReviewUpdateOne) ClearMovie() *ReviewUpdateOne {
+	ruo.mutation.ClearMovie()
 	return ruo
 }
 
-// RemoveMovieIDs removes the "movies" edge to Movie entities by IDs.
-func (ruo *ReviewUpdateOne) RemoveMovieIDs(ids ...int) *ReviewUpdateOne {
-	ruo.mutation.RemoveMovieIDs(ids...)
-	return ruo
-}
-
-// RemoveMovies removes "movies" edges to Movie entities.
-func (ruo *ReviewUpdateOne) RemoveMovies(m ...*Movie) *ReviewUpdateOne {
-	ids := make([]int, len(m))
-	for i := range m {
-		ids[i] = m[i].ID
-	}
-	return ruo.RemoveMovieIDs(ids...)
-}
-
-// ClearUser clears all "user" edges to the User entity.
+// ClearUser clears the "user" edge to the User entity.
 func (ruo *ReviewUpdateOne) ClearUser() *ReviewUpdateOne {
 	ruo.mutation.ClearUser()
 	return ruo
-}
-
-// RemoveUserIDs removes the "user" edge to User entities by IDs.
-func (ruo *ReviewUpdateOne) RemoveUserIDs(ids ...int) *ReviewUpdateOne {
-	ruo.mutation.RemoveUserIDs(ids...)
-	return ruo
-}
-
-// RemoveUser removes "user" edges to User entities.
-func (ruo *ReviewUpdateOne) RemoveUser(u ...*User) *ReviewUpdateOne {
-	ids := make([]int, len(u))
-	for i := range u {
-		ids[i] = u[i].ID
-	}
-	return ruo.RemoveUserIDs(ids...)
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
@@ -558,12 +476,12 @@ func (ruo *ReviewUpdateOne) sqlSave(ctx context.Context) (_node *Review, err err
 			Column: review.FieldRank,
 		})
 	}
-	if ruo.mutation.MoviesCleared() {
+	if ruo.mutation.MovieCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   review.MoviesTable,
-			Columns: review.MoviesPrimaryKey,
+			Table:   review.MovieTable,
+			Columns: []string{review.MovieColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -574,31 +492,12 @@ func (ruo *ReviewUpdateOne) sqlSave(ctx context.Context) (_node *Review, err err
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := ruo.mutation.RemovedMoviesIDs(); len(nodes) > 0 && !ruo.mutation.MoviesCleared() {
+	if nodes := ruo.mutation.MovieIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   review.MoviesTable,
-			Columns: review.MoviesPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: movie.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ruo.mutation.MoviesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   review.MoviesTable,
-			Columns: review.MoviesPrimaryKey,
+			Table:   review.MovieTable,
+			Columns: []string{review.MovieColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -614,10 +513,10 @@ func (ruo *ReviewUpdateOne) sqlSave(ctx context.Context) (_node *Review, err err
 	}
 	if ruo.mutation.UserCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: true,
 			Table:   review.UserTable,
-			Columns: review.UserPrimaryKey,
+			Columns: []string{review.UserColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -625,34 +524,15 @@ func (ruo *ReviewUpdateOne) sqlSave(ctx context.Context) (_node *Review, err err
 					Column: user.FieldID,
 				},
 			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ruo.mutation.RemovedUserIDs(); len(nodes) > 0 && !ruo.mutation.UserCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   review.UserTable,
-			Columns: review.UserPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: user.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := ruo.mutation.UserIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: true,
 			Table:   review.UserTable,
-			Columns: review.UserPrimaryKey,
+			Columns: []string{review.UserColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{

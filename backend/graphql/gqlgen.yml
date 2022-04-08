@@ -5,7 +5,6 @@ schema:
 # resolver reports where the resolver implementations go.
 resolver:
   layout: follow-schema
-  dir: graphql
 
 # gqlgen will search for any type names in the schema in these go packages
 # if they match it will use them, otherwise it will generate them.
@@ -21,6 +20,9 @@ models:
   ID:
     model:
       - github.com/99designs/gqlgen/graphql.IntID
+  Node:
+    model:
+      - imdbv2/ent.Noder
   # Map the Status type that was defined in the schema
   Status:
     model:

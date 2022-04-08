@@ -22,7 +22,10 @@ func (Review) Fields() []ent.Field {
 // Edges of the Review.
 func (Review) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("movies", Movie.Type),
-		edge.From("user", User.Type).Ref("reviews"),
+		edge.To("movie", Movie.Type).
+			Unique(),
+		edge.From("user", User.Type).
+			Ref("reviews").
+			Unique(),
 	}
 }

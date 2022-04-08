@@ -4,7 +4,7 @@ import (
 	"context"
 	"entgo.io/contrib/entgql"
 	"github.com/99designs/gqlgen/graphql/handler"
-	"github.com/99designs/gqlgen/graphql/handler/debug"
+	"github.com/99designs/gqlgen/graphql/playground"
 	"imdbv2/ent"
 	"imdbv2/ent/migrate"
 	"imdbv2/graphql"
@@ -15,11 +15,6 @@ import (
 )
 
 func main() {
-	var cli struct {
-		Addr  string `name:"address" defualt:":8081" help:"Address to listen on."`
-		Debug bool   `name:"debug" help:"Enable debugging mode."`
-	}
-
 	// Create an ent.Client with in-memory SQLite database.
 	client, err := ent.Open("mysql", "root:pass@tcp(127.0.0.1:3306)/test")
 	if err != nil {
@@ -27,6 +22,10 @@ func main() {
 	}
 
 	defer client.Close()
+	if err != nil {
+		log.Fatalf("server closing error")
+	}
+
 	ctx := context.Background()
 
 	// Run the automatic migration tool to create all schema resources.
@@ -36,12 +35,14 @@ func main() {
 
 	srv := handler.NewDefaultServer(graphql.NewSchema(client))
 	srv.Use(entgql.Transactioner{TxOpener: client})
-	if cli.Debug {
-		srv.Use(&debug.Tracer{})
-	}
 
-	log.Println("listening on", cli.Addr)
-	if err := http.ListenAndServe(cli.Addr, nil); err != nil {
+	http.Handle("/",
+		playground.Handler("Movie", "/query"),
+	)
+	http.Handle("/query", srv)
+
+	log.Println("listening on", "localhost:8081")
+	if err := http.ListenAndServe("localhost:8081", nil); err != nil {
 		log.Fatalf("error running server (%s)", err)
 	}
 }

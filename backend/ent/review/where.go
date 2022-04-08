@@ -293,25 +293,25 @@ func RankLTE(v int) predicate.Review {
 	})
 }
 
-// HasMovies applies the HasEdge predicate on the "movies" edge.
-func HasMovies() predicate.Review {
+// HasMovie applies the HasEdge predicate on the "movie" edge.
+func HasMovie() predicate.Review {
 	return predicate.Review(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(MoviesTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, MoviesTable, MoviesPrimaryKey...),
+			sqlgraph.To(MovieTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, MovieTable, MovieColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasMoviesWith applies the HasEdge predicate on the "movies" edge with a given conditions (other predicates).
-func HasMoviesWith(preds ...predicate.Movie) predicate.Review {
+// HasMovieWith applies the HasEdge predicate on the "movie" edge with a given conditions (other predicates).
+func HasMovieWith(preds ...predicate.Movie) predicate.Review {
 	return predicate.Review(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(MoviesInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, MoviesTable, MoviesPrimaryKey...),
+			sqlgraph.To(MovieInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, MovieTable, MovieColumn),
 		)
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
@@ -327,7 +327,7 @@ func HasUser() predicate.Review {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
 			sqlgraph.To(UserTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, UserTable, UserPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, true, UserTable, UserColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
@@ -339,7 +339,7 @@ func HasUserWith(preds ...predicate.User) predicate.Review {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
 			sqlgraph.To(UserInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, UserTable, UserPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, true, UserTable, UserColumn),
 		)
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {

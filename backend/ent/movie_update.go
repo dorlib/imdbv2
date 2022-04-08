@@ -73,14 +73,14 @@ func (mu *MovieUpdate) SetDirector(d *Director) *MovieUpdate {
 	return mu.SetDirectorID(d.ID)
 }
 
-// AddReviewIDs adds the "review" edge to the Review entity by IDs.
+// AddReviewIDs adds the "reviews" edge to the Review entity by IDs.
 func (mu *MovieUpdate) AddReviewIDs(ids ...int) *MovieUpdate {
 	mu.mutation.AddReviewIDs(ids...)
 	return mu
 }
 
-// AddReview adds the "review" edges to the Review entity.
-func (mu *MovieUpdate) AddReview(r ...*Review) *MovieUpdate {
+// AddReviews adds the "reviews" edges to the Review entity.
+func (mu *MovieUpdate) AddReviews(r ...*Review) *MovieUpdate {
 	ids := make([]int, len(r))
 	for i := range r {
 		ids[i] = r[i].ID
@@ -99,20 +99,20 @@ func (mu *MovieUpdate) ClearDirector() *MovieUpdate {
 	return mu
 }
 
-// ClearReview clears all "review" edges to the Review entity.
-func (mu *MovieUpdate) ClearReview() *MovieUpdate {
-	mu.mutation.ClearReview()
+// ClearReviews clears all "reviews" edges to the Review entity.
+func (mu *MovieUpdate) ClearReviews() *MovieUpdate {
+	mu.mutation.ClearReviews()
 	return mu
 }
 
-// RemoveReviewIDs removes the "review" edge to Review entities by IDs.
+// RemoveReviewIDs removes the "reviews" edge to Review entities by IDs.
 func (mu *MovieUpdate) RemoveReviewIDs(ids ...int) *MovieUpdate {
 	mu.mutation.RemoveReviewIDs(ids...)
 	return mu
 }
 
-// RemoveReview removes "review" edges to Review entities.
-func (mu *MovieUpdate) RemoveReview(r ...*Review) *MovieUpdate {
+// RemoveReviews removes "reviews" edges to Review entities.
+func (mu *MovieUpdate) RemoveReviews(r ...*Review) *MovieUpdate {
 	ids := make([]int, len(r))
 	for i := range r {
 		ids[i] = r[i].ID
@@ -255,12 +255,12 @@ func (mu *MovieUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if mu.mutation.ReviewCleared() {
+	if mu.mutation.ReviewsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
-			Table:   movie.ReviewTable,
-			Columns: movie.ReviewPrimaryKey,
+			Table:   movie.ReviewsTable,
+			Columns: []string{movie.ReviewsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -271,12 +271,12 @@ func (mu *MovieUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := mu.mutation.RemovedReviewIDs(); len(nodes) > 0 && !mu.mutation.ReviewCleared() {
+	if nodes := mu.mutation.RemovedReviewsIDs(); len(nodes) > 0 && !mu.mutation.ReviewsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
-			Table:   movie.ReviewTable,
-			Columns: movie.ReviewPrimaryKey,
+			Table:   movie.ReviewsTable,
+			Columns: []string{movie.ReviewsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -290,12 +290,12 @@ func (mu *MovieUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := mu.mutation.ReviewIDs(); len(nodes) > 0 {
+	if nodes := mu.mutation.ReviewsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
-			Table:   movie.ReviewTable,
-			Columns: movie.ReviewPrimaryKey,
+			Table:   movie.ReviewsTable,
+			Columns: []string{movie.ReviewsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -372,14 +372,14 @@ func (muo *MovieUpdateOne) SetDirector(d *Director) *MovieUpdateOne {
 	return muo.SetDirectorID(d.ID)
 }
 
-// AddReviewIDs adds the "review" edge to the Review entity by IDs.
+// AddReviewIDs adds the "reviews" edge to the Review entity by IDs.
 func (muo *MovieUpdateOne) AddReviewIDs(ids ...int) *MovieUpdateOne {
 	muo.mutation.AddReviewIDs(ids...)
 	return muo
 }
 
-// AddReview adds the "review" edges to the Review entity.
-func (muo *MovieUpdateOne) AddReview(r ...*Review) *MovieUpdateOne {
+// AddReviews adds the "reviews" edges to the Review entity.
+func (muo *MovieUpdateOne) AddReviews(r ...*Review) *MovieUpdateOne {
 	ids := make([]int, len(r))
 	for i := range r {
 		ids[i] = r[i].ID
@@ -398,20 +398,20 @@ func (muo *MovieUpdateOne) ClearDirector() *MovieUpdateOne {
 	return muo
 }
 
-// ClearReview clears all "review" edges to the Review entity.
-func (muo *MovieUpdateOne) ClearReview() *MovieUpdateOne {
-	muo.mutation.ClearReview()
+// ClearReviews clears all "reviews" edges to the Review entity.
+func (muo *MovieUpdateOne) ClearReviews() *MovieUpdateOne {
+	muo.mutation.ClearReviews()
 	return muo
 }
 
-// RemoveReviewIDs removes the "review" edge to Review entities by IDs.
+// RemoveReviewIDs removes the "reviews" edge to Review entities by IDs.
 func (muo *MovieUpdateOne) RemoveReviewIDs(ids ...int) *MovieUpdateOne {
 	muo.mutation.RemoveReviewIDs(ids...)
 	return muo
 }
 
-// RemoveReview removes "review" edges to Review entities.
-func (muo *MovieUpdateOne) RemoveReview(r ...*Review) *MovieUpdateOne {
+// RemoveReviews removes "reviews" edges to Review entities.
+func (muo *MovieUpdateOne) RemoveReviews(r ...*Review) *MovieUpdateOne {
 	ids := make([]int, len(r))
 	for i := range r {
 		ids[i] = r[i].ID
@@ -578,12 +578,12 @@ func (muo *MovieUpdateOne) sqlSave(ctx context.Context) (_node *Movie, err error
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if muo.mutation.ReviewCleared() {
+	if muo.mutation.ReviewsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
-			Table:   movie.ReviewTable,
-			Columns: movie.ReviewPrimaryKey,
+			Table:   movie.ReviewsTable,
+			Columns: []string{movie.ReviewsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -594,12 +594,12 @@ func (muo *MovieUpdateOne) sqlSave(ctx context.Context) (_node *Movie, err error
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := muo.mutation.RemovedReviewIDs(); len(nodes) > 0 && !muo.mutation.ReviewCleared() {
+	if nodes := muo.mutation.RemovedReviewsIDs(); len(nodes) > 0 && !muo.mutation.ReviewsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
-			Table:   movie.ReviewTable,
-			Columns: movie.ReviewPrimaryKey,
+			Table:   movie.ReviewsTable,
+			Columns: []string{movie.ReviewsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -613,12 +613,12 @@ func (muo *MovieUpdateOne) sqlSave(ctx context.Context) (_node *Movie, err error
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := muo.mutation.ReviewIDs(); len(nodes) > 0 {
+	if nodes := muo.mutation.ReviewsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
-			Table:   movie.ReviewTable,
-			Columns: movie.ReviewPrimaryKey,
+			Table:   movie.ReviewsTable,
+			Columns: []string{movie.ReviewsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{

@@ -25,11 +25,13 @@ const (
 	EdgeReviews = "reviews"
 	// Table holds the table name of the user in the database.
 	Table = "users"
-	// ReviewsTable is the table that holds the reviews relation/edge. The primary key declared below.
-	ReviewsTable = "user_reviews"
+	// ReviewsTable is the table that holds the reviews relation/edge.
+	ReviewsTable = "reviews"
 	// ReviewsInverseTable is the table name for the Review entity.
 	// It exists in this package in order to avoid circular dependency with the "review" package.
 	ReviewsInverseTable = "reviews"
+	// ReviewsColumn is the table column denoting the reviews relation/edge.
+	ReviewsColumn = "user_reviews"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -43,12 +45,6 @@ var Columns = []string{
 	FieldEmail,
 	FieldBirthDay,
 }
-
-var (
-	// ReviewsPrimaryKey and ReviewsColumn2 are the table columns denoting the
-	// primary key for the reviews relation (M2M).
-	ReviewsPrimaryKey = []string{"user_id", "review_id"}
-)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {

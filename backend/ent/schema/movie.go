@@ -25,6 +25,6 @@ func (Movie) Fields() []ent.Field {
 func (Movie) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("director", Director.Type).Ref("movies").Unique(),
-		edge.From("review", Review.Type).Ref("movies"),
+		edge.From("reviews", Review.Type).Ref("movie"),
 	}
 }

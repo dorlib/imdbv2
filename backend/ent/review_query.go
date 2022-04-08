@@ -4,7 +4,6 @@ package ent
 
 import (
 	"context"
-	"database/sql/driver"
 	"errors"
 	"fmt"
 	"imdbv2/ent/movie"
@@ -28,8 +27,9 @@ type ReviewQuery struct {
 	fields     []string
 	predicates []predicate.Review
 	// eager-loading edges.
-	withMovies *MovieQuery
-	withUser   *UserQuery
+	withMovie *MovieQuery
+	withUser  *UserQuery
+	withFKs   bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -66,8 +66,8 @@ func (rq *ReviewQuery) Order(o ...OrderFunc) *ReviewQuery {
 	return rq
 }
 
-// QueryMovies chains the current query on the "movies" edge.
-func (rq *ReviewQuery) QueryMovies() *MovieQuery {
+// QueryMovie chains the current query on the "movie" edge.
+func (rq *ReviewQuery) QueryMovie() *MovieQuery {
 	query := &MovieQuery{config: rq.config}
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := rq.prepareQuery(ctx); err != nil {
@@ -80,7 +80,7 @@ func (rq *ReviewQuery) QueryMovies() *MovieQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(review.Table, review.FieldID, selector),
 			sqlgraph.To(movie.Table, movie.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, review.MoviesTable, review.MoviesPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, false, review.MovieTable, review.MovieColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(rq.driver.Dialect(), step)
 		return fromU, nil
@@ -102,7 +102,7 @@ func (rq *ReviewQuery) QueryUser() *UserQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(review.Table, review.FieldID, selector),
 			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, review.UserTable, review.UserPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, true, review.UserTable, review.UserColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(rq.driver.Dialect(), step)
 		return fromU, nil
@@ -291,7 +291,7 @@ func (rq *ReviewQuery) Clone() *ReviewQuery {
 		offset:     rq.offset,
 		order:      append([]OrderFunc{}, rq.order...),
 		predicates: append([]predicate.Review{}, rq.predicates...),
-		withMovies: rq.withMovies.Clone(),
+		withMovie:  rq.withMovie.Clone(),
 		withUser:   rq.withUser.Clone(),
 		// clone intermediate query.
 		sql:    rq.sql.Clone(),
@@ -300,14 +300,14 @@ func (rq *ReviewQuery) Clone() *ReviewQuery {
 	}
 }
 
-// WithMovies tells the query-builder to eager-load the nodes that are connected to
-// the "movies" edge. The optional arguments are used to configure the query builder of the edge.
-func (rq *ReviewQuery) WithMovies(opts ...func(*MovieQuery)) *ReviewQuery {
+// WithMovie tells the query-builder to eager-load the nodes that are connected to
+// the "movie" edge. The optional arguments are used to configure the query builder of the edge.
+func (rq *ReviewQuery) WithMovie(opts ...func(*MovieQuery)) *ReviewQuery {
 	query := &MovieQuery{config: rq.config}
 	for _, opt := range opts {
 		opt(query)
 	}
-	rq.withMovies = query
+	rq.withMovie = query
 	return rq
 }
 
@@ -386,12 +386,19 @@ func (rq *ReviewQuery) prepareQuery(ctx context.Context) error {
 func (rq *ReviewQuery) sqlAll(ctx context.Context) ([]*Review, error) {
 	var (
 		nodes       = []*Review{}
+		withFKs     = rq.withFKs
 		_spec       = rq.querySpec()
 		loadedTypes = [2]bool{
-			rq.withMovies != nil,
+			rq.withMovie != nil,
 			rq.withUser != nil,
 		}
 	)
+	if rq.withMovie != nil || rq.withUser != nil {
+		withFKs = true
+	}
+	if withFKs {
+		_spec.Node.Columns = append(_spec.Node.Columns, review.ForeignKeys...)
+	}
 	_spec.ScanValues = func(columns []string) ([]interface{}, error) {
 		node := &Review{config: rq.config}
 		nodes = append(nodes, node)
@@ -412,132 +419,60 @@ func (rq *ReviewQuery) sqlAll(ctx context.Context) ([]*Review, error) {
 		return nodes, nil
 	}
 
-	if query := rq.withMovies; query != nil {
-		fks := make([]driver.Value, 0, len(nodes))
-		ids := make(map[int]*Review, len(nodes))
-		for _, node := range nodes {
-			ids[node.ID] = node
-			fks = append(fks, node.ID)
-			node.Edges.Movies = []*Movie{}
+	if query := rq.withMovie; query != nil {
+		ids := make([]int, 0, len(nodes))
+		nodeids := make(map[int][]*Review)
+		for i := range nodes {
+			if nodes[i].review_movie == nil {
+				continue
+			}
+			fk := *nodes[i].review_movie
+			if _, ok := nodeids[fk]; !ok {
+				ids = append(ids, fk)
+			}
+			nodeids[fk] = append(nodeids[fk], nodes[i])
 		}
-		var (
-			edgeids []int
-			edges   = make(map[int][]*Review)
-		)
-		_spec := &sqlgraph.EdgeQuerySpec{
-			Edge: &sqlgraph.EdgeSpec{
-				Inverse: false,
-				Table:   review.MoviesTable,
-				Columns: review.MoviesPrimaryKey,
-			},
-			Predicate: func(s *sql.Selector) {
-				s.Where(sql.InValues(review.MoviesPrimaryKey[0], fks...))
-			},
-			ScanValues: func() [2]interface{} {
-				return [2]interface{}{new(sql.NullInt64), new(sql.NullInt64)}
-			},
-			Assign: func(out, in interface{}) error {
-				eout, ok := out.(*sql.NullInt64)
-				if !ok || eout == nil {
-					return fmt.Errorf("unexpected id value for edge-out")
-				}
-				ein, ok := in.(*sql.NullInt64)
-				if !ok || ein == nil {
-					return fmt.Errorf("unexpected id value for edge-in")
-				}
-				outValue := int(eout.Int64)
-				inValue := int(ein.Int64)
-				node, ok := ids[outValue]
-				if !ok {
-					return fmt.Errorf("unexpected node id in edges: %v", outValue)
-				}
-				if _, ok := edges[inValue]; !ok {
-					edgeids = append(edgeids, inValue)
-				}
-				edges[inValue] = append(edges[inValue], node)
-				return nil
-			},
-		}
-		if err := sqlgraph.QueryEdges(ctx, rq.driver, _spec); err != nil {
-			return nil, fmt.Errorf(`query edges "movies": %w`, err)
-		}
-		query.Where(movie.IDIn(edgeids...))
+		query.Where(movie.IDIn(ids...))
 		neighbors, err := query.All(ctx)
 		if err != nil {
 			return nil, err
 		}
 		for _, n := range neighbors {
-			nodes, ok := edges[n.ID]
+			nodes, ok := nodeids[n.ID]
 			if !ok {
-				return nil, fmt.Errorf(`unexpected "movies" node returned %v`, n.ID)
+				return nil, fmt.Errorf(`unexpected foreign-key "review_movie" returned %v`, n.ID)
 			}
 			for i := range nodes {
-				nodes[i].Edges.Movies = append(nodes[i].Edges.Movies, n)
+				nodes[i].Edges.Movie = n
 			}
 		}
 	}
 
 	if query := rq.withUser; query != nil {
-		fks := make([]driver.Value, 0, len(nodes))
-		ids := make(map[int]*Review, len(nodes))
-		for _, node := range nodes {
-			ids[node.ID] = node
-			fks = append(fks, node.ID)
-			node.Edges.User = []*User{}
+		ids := make([]int, 0, len(nodes))
+		nodeids := make(map[int][]*Review)
+		for i := range nodes {
+			if nodes[i].user_reviews == nil {
+				continue
+			}
+			fk := *nodes[i].user_reviews
+			if _, ok := nodeids[fk]; !ok {
+				ids = append(ids, fk)
+			}
+			nodeids[fk] = append(nodeids[fk], nodes[i])
 		}
-		var (
-			edgeids []int
-			edges   = make(map[int][]*Review)
-		)
-		_spec := &sqlgraph.EdgeQuerySpec{
-			Edge: &sqlgraph.EdgeSpec{
-				Inverse: true,
-				Table:   review.UserTable,
-				Columns: review.UserPrimaryKey,
-			},
-			Predicate: func(s *sql.Selector) {
-				s.Where(sql.InValues(review.UserPrimaryKey[1], fks...))
-			},
-			ScanValues: func() [2]interface{} {
-				return [2]interface{}{new(sql.NullInt64), new(sql.NullInt64)}
-			},
-			Assign: func(out, in interface{}) error {
-				eout, ok := out.(*sql.NullInt64)
-				if !ok || eout == nil {
-					return fmt.Errorf("unexpected id value for edge-out")
-				}
-				ein, ok := in.(*sql.NullInt64)
-				if !ok || ein == nil {
-					return fmt.Errorf("unexpected id value for edge-in")
-				}
-				outValue := int(eout.Int64)
-				inValue := int(ein.Int64)
-				node, ok := ids[outValue]
-				if !ok {
-					return fmt.Errorf("unexpected node id in edges: %v", outValue)
-				}
-				if _, ok := edges[inValue]; !ok {
-					edgeids = append(edgeids, inValue)
-				}
-				edges[inValue] = append(edges[inValue], node)
-				return nil
-			},
-		}
-		if err := sqlgraph.QueryEdges(ctx, rq.driver, _spec); err != nil {
-			return nil, fmt.Errorf(`query edges "user": %w`, err)
-		}
-		query.Where(user.IDIn(edgeids...))
+		query.Where(user.IDIn(ids...))
 		neighbors, err := query.All(ctx)
 		if err != nil {
 			return nil, err
 		}
 		for _, n := range neighbors {
-			nodes, ok := edges[n.ID]
+			nodes, ok := nodeids[n.ID]
 			if !ok {
-				return nil, fmt.Errorf(`unexpected "user" node returned %v`, n.ID)
+				return nil, fmt.Errorf(`unexpected foreign-key "user_reviews" returned %v`, n.ID)
 			}
 			for i := range nodes {
-				nodes[i].Edges.User = append(nodes[i].Edges.User, n)
+				nodes[i].Edges.User = n
 			}
 		}
 	}

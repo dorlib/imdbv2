@@ -11,22 +11,26 @@ const (
 	FieldText = "text"
 	// FieldRank holds the string denoting the rank field in the database.
 	FieldRank = "rank"
-	// EdgeMovies holds the string denoting the movies edge name in mutations.
-	EdgeMovies = "movies"
+	// EdgeMovie holds the string denoting the movie edge name in mutations.
+	EdgeMovie = "movie"
 	// EdgeUser holds the string denoting the user edge name in mutations.
 	EdgeUser = "user"
 	// Table holds the table name of the review in the database.
 	Table = "reviews"
-	// MoviesTable is the table that holds the movies relation/edge. The primary key declared below.
-	MoviesTable = "review_movies"
-	// MoviesInverseTable is the table name for the Movie entity.
+	// MovieTable is the table that holds the movie relation/edge.
+	MovieTable = "reviews"
+	// MovieInverseTable is the table name for the Movie entity.
 	// It exists in this package in order to avoid circular dependency with the "movie" package.
-	MoviesInverseTable = "movies"
-	// UserTable is the table that holds the user relation/edge. The primary key declared below.
-	UserTable = "user_reviews"
+	MovieInverseTable = "movies"
+	// MovieColumn is the table column denoting the movie relation/edge.
+	MovieColumn = "review_movie"
+	// UserTable is the table that holds the user relation/edge.
+	UserTable = "reviews"
 	// UserInverseTable is the table name for the User entity.
 	// It exists in this package in order to avoid circular dependency with the "user" package.
 	UserInverseTable = "users"
+	// UserColumn is the table column denoting the user relation/edge.
+	UserColumn = "user_reviews"
 )
 
 // Columns holds all SQL columns for review fields.
@@ -36,19 +40,22 @@ var Columns = []string{
 	FieldRank,
 }
 
-var (
-	// MoviesPrimaryKey and MoviesColumn2 are the table columns denoting the
-	// primary key for the movies relation (M2M).
-	MoviesPrimaryKey = []string{"review_id", "movie_id"}
-	// UserPrimaryKey and UserColumn2 are the table columns denoting the
-	// primary key for the user relation (M2M).
-	UserPrimaryKey = []string{"user_id", "review_id"}
-)
+// ForeignKeys holds the SQL foreign-keys that are owned by the "reviews"
+// table and are not defined as standalone fields in the schema.
+var ForeignKeys = []string{
+	"review_movie",
+	"user_reviews",
+}
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
+			return true
+		}
+	}
+	for i := range ForeignKeys {
+		if column == ForeignKeys[i] {
 			return true
 		}
 	}

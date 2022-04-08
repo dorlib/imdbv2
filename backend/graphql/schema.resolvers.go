@@ -9,39 +9,64 @@ import (
 	"imdbv2/ent"
 )
 
-func (r *directorResolver) Children(ctx context.Context, obj *ent.Director) ([]*ent.Movie, error) {
-	panic(fmt.Errorf("not implemented"))
-}
-
-func (r *movieResolver) Director(ctx context.Context, obj *ent.Movie) (string, error) {
-	panic(fmt.Errorf("not implemented"))
-}
-
-func (r *movieResolver) Parent(ctx context.Context, obj *ent.Movie) (*ent.Director, error) {
-	panic(fmt.Errorf("not implemented"))
-}
-
 func (r *mutationResolver) CreateMovie(ctx context.Context, movie MovieInput) (*ent.Movie, error) {
-	panic(fmt.Errorf("not implemented"))
+	return r.client.Movie.Create().
+		SetName(movie.Name).
+		SetName(movie.Description).
+		SetRank(movie.Rank).
+		Save(ctx)
+}
+
+func (r *mutationResolver) CreateDirector(ctx context.Context, director DirectorInput) (*ent.Director, error) {
+	return r.client.Director.Create().
+		SetName(director.Name).
+		Save(ctx)
+}
+
+func (r *mutationResolver) CreateReview(ctx context.Context, review ReviewInput) (*ent.Review, error) {
+	return r.client.Review.Create().
+		SetText(review.Text).
+		SetRank(review.Rank).
+		Save(ctx)
+}
+
+func (r *mutationResolver) CreateUser(ctx context.Context, user UserInput) (*ent.User, error) {
+	return r.client.User.Create().
+		SetFirstname(user.Firstname).
+		SetLastname(user.Lastname).
+		SetNickname(user.Nickname).
+		SetEmail(user.Email).
+		SetPassword(user.Password).
+		SetDescription(user.Description).
+		SetBirthDay(user.Birthday).
+		Save(ctx)
 }
 
 func (r *queryResolver) Movies(ctx context.Context) ([]*ent.Movie, error) {
+	return r.client.Movie.Query().All(ctx)
+}
+
+func (r *queryResolver) Directors(ctx context.Context) ([]*ent.Director, error) {
+	return r.client.Director.Query().All(ctx)
+}
+
+func (r *queryResolver) Users(ctx context.Context) ([]*ent.User, error) {
+	return r.client.User.Query().All(ctx)
+}
+
+func (r *queryResolver) Node(ctx context.Context, id int) (ent.Noder, error) {
 	panic(fmt.Errorf("not implemented"))
 }
 
-// Director returns DirectorResolver implementation.
-func (r *Resolver) Director() DirectorResolver { return &directorResolver{r} }
+func (r *queryResolver) Nodes(ctx context.Context, ids []int) ([]ent.Noder, error) {
+	panic(fmt.Errorf("not implemented"))
+}
 
-// Movie returns MovieResolver implementation.
-func (r *Resolver) Movie() MovieResolver { return &movieResolver{r} }
-
-// Mutation returns MutationResolver implementation.
+// Mutation returns imdbv2.MutationResolver implementation.
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 
-// Query returns QueryResolver implementation.
+// Query returns imdbv2.QueryResolver implementation.
 func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
-type directorResolver struct{ *Resolver }
-type movieResolver struct{ *Resolver }
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }

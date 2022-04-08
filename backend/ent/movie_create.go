@@ -58,14 +58,14 @@ func (mc *MovieCreate) SetDirector(d *Director) *MovieCreate {
 	return mc.SetDirectorID(d.ID)
 }
 
-// AddReviewIDs adds the "review" edge to the Review entity by IDs.
+// AddReviewIDs adds the "reviews" edge to the Review entity by IDs.
 func (mc *MovieCreate) AddReviewIDs(ids ...int) *MovieCreate {
 	mc.mutation.AddReviewIDs(ids...)
 	return mc
 }
 
-// AddReview adds the "review" edges to the Review entity.
-func (mc *MovieCreate) AddReview(r ...*Review) *MovieCreate {
+// AddReviews adds the "reviews" edges to the Review entity.
+func (mc *MovieCreate) AddReviews(r ...*Review) *MovieCreate {
 	ids := make([]int, len(r))
 	for i := range r {
 		ids[i] = r[i].ID
@@ -223,12 +223,12 @@ func (mc *MovieCreate) createSpec() (*Movie, *sqlgraph.CreateSpec) {
 		_node.director_movies = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := mc.mutation.ReviewIDs(); len(nodes) > 0 {
+	if nodes := mc.mutation.ReviewsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
-			Table:   movie.ReviewTable,
-			Columns: movie.ReviewPrimaryKey,
+			Table:   movie.ReviewsTable,
+			Columns: []string{movie.ReviewsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
