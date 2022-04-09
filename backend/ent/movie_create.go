@@ -39,16 +39,16 @@ func (mc *MovieCreate) SetRank(i int) *MovieCreate {
 	return mc
 }
 
-// SetDirectorID sets the "director" edge to the Director entity by ID.
-func (mc *MovieCreate) SetDirectorID(id int) *MovieCreate {
-	mc.mutation.SetDirectorID(id)
+// SetDirectorID sets the "director_id" field.
+func (mc *MovieCreate) SetDirectorID(i int) *MovieCreate {
+	mc.mutation.SetDirectorID(i)
 	return mc
 }
 
-// SetNillableDirectorID sets the "director" edge to the Director entity by ID if the given value is not nil.
-func (mc *MovieCreate) SetNillableDirectorID(id *int) *MovieCreate {
-	if id != nil {
-		mc = mc.SetDirectorID(*id)
+// SetNillableDirectorID sets the "director_id" field if the given value is not nil.
+func (mc *MovieCreate) SetNillableDirectorID(i *int) *MovieCreate {
+	if i != nil {
+		mc.SetDirectorID(*i)
 	}
 	return mc
 }
@@ -220,7 +220,7 @@ func (mc *MovieCreate) createSpec() (*Movie, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.director_movies = &nodes[0]
+		_node.DirectorID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := mc.mutation.ReviewsIDs(); len(nodes) > 0 {

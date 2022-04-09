@@ -54,17 +54,23 @@ func (mu *MovieUpdate) AddRank(i int) *MovieUpdate {
 	return mu
 }
 
-// SetDirectorID sets the "director" edge to the Director entity by ID.
-func (mu *MovieUpdate) SetDirectorID(id int) *MovieUpdate {
-	mu.mutation.SetDirectorID(id)
+// SetDirectorID sets the "director_id" field.
+func (mu *MovieUpdate) SetDirectorID(i int) *MovieUpdate {
+	mu.mutation.SetDirectorID(i)
 	return mu
 }
 
-// SetNillableDirectorID sets the "director" edge to the Director entity by ID if the given value is not nil.
-func (mu *MovieUpdate) SetNillableDirectorID(id *int) *MovieUpdate {
-	if id != nil {
-		mu = mu.SetDirectorID(*id)
+// SetNillableDirectorID sets the "director_id" field if the given value is not nil.
+func (mu *MovieUpdate) SetNillableDirectorID(i *int) *MovieUpdate {
+	if i != nil {
+		mu.SetDirectorID(*i)
 	}
+	return mu
+}
+
+// ClearDirectorID clears the value of the "director_id" field.
+func (mu *MovieUpdate) ClearDirectorID() *MovieUpdate {
+	mu.mutation.ClearDirectorID()
 	return mu
 }
 
@@ -353,17 +359,23 @@ func (muo *MovieUpdateOne) AddRank(i int) *MovieUpdateOne {
 	return muo
 }
 
-// SetDirectorID sets the "director" edge to the Director entity by ID.
-func (muo *MovieUpdateOne) SetDirectorID(id int) *MovieUpdateOne {
-	muo.mutation.SetDirectorID(id)
+// SetDirectorID sets the "director_id" field.
+func (muo *MovieUpdateOne) SetDirectorID(i int) *MovieUpdateOne {
+	muo.mutation.SetDirectorID(i)
 	return muo
 }
 
-// SetNillableDirectorID sets the "director" edge to the Director entity by ID if the given value is not nil.
-func (muo *MovieUpdateOne) SetNillableDirectorID(id *int) *MovieUpdateOne {
-	if id != nil {
-		muo = muo.SetDirectorID(*id)
+// SetNillableDirectorID sets the "director_id" field if the given value is not nil.
+func (muo *MovieUpdateOne) SetNillableDirectorID(i *int) *MovieUpdateOne {
+	if i != nil {
+		muo.SetDirectorID(*i)
 	}
+	return muo
+}
+
+// ClearDirectorID clears the value of the "director_id" field.
+func (muo *MovieUpdateOne) ClearDirectorID() *MovieUpdateOne {
+	muo.mutation.ClearDirectorID()
 	return muo
 }
 

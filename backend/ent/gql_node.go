@@ -82,7 +82,7 @@ func (m *Movie) Node(ctx context.Context) (node *Node, err error) {
 	node = &Node{
 		ID:     m.ID,
 		Type:   "Movie",
-		Fields: make([]*Field, 3),
+		Fields: make([]*Field, 4),
 		Edges:  make([]*Edge, 2),
 	}
 	var buf []byte
@@ -108,6 +108,14 @@ func (m *Movie) Node(ctx context.Context) (node *Node, err error) {
 	node.Fields[2] = &Field{
 		Type:  "int",
 		Name:  "rank",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(m.DirectorID); err != nil {
+		return nil, err
+	}
+	node.Fields[3] = &Field{
+		Type:  "int",
+		Name:  "director_id",
 		Value: string(buf),
 	}
 	node.Edges[0] = &Edge{

@@ -19,7 +19,7 @@ const (
 	// It exists in this package in order to avoid circular dependency with the "movie" package.
 	MoviesInverseTable = "movies"
 	// MoviesColumn is the table column denoting the movies relation/edge.
-	MoviesColumn = "director_movies"
+	MoviesColumn = "director_id"
 )
 
 // Columns holds all SQL columns for director fields.

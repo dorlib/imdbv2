@@ -13,6 +13,8 @@ const (
 	FieldDescription = "description"
 	// FieldRank holds the string denoting the rank field in the database.
 	FieldRank = "rank"
+	// FieldDirectorID holds the string denoting the director_id field in the database.
+	FieldDirectorID = "director_id"
 	// EdgeDirector holds the string denoting the director edge name in mutations.
 	EdgeDirector = "director"
 	// EdgeReviews holds the string denoting the reviews edge name in mutations.
@@ -25,7 +27,7 @@ const (
 	// It exists in this package in order to avoid circular dependency with the "director" package.
 	DirectorInverseTable = "directors"
 	// DirectorColumn is the table column denoting the director relation/edge.
-	DirectorColumn = "director_movies"
+	DirectorColumn = "director_id"
 	// ReviewsTable is the table that holds the reviews relation/edge.
 	ReviewsTable = "reviews"
 	// ReviewsInverseTable is the table name for the Review entity.
@@ -41,23 +43,13 @@ var Columns = []string{
 	FieldName,
 	FieldDescription,
 	FieldRank,
-}
-
-// ForeignKeys holds the SQL foreign-keys that are owned by the "movies"
-// table and are not defined as standalone fields in the schema.
-var ForeignKeys = []string{
-	"director_movies",
+	FieldDirectorID,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
-			return true
-		}
-	}
-	for i := range ForeignKeys {
-		if column == ForeignKeys[i] {
 			return true
 		}
 	}

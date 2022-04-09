@@ -22,10 +22,11 @@ type Movie struct {
 	Description string `json:"description,omitempty"`
 	// Rank holds the value of the "rank" field.
 	Rank int `json:"rank,omitempty"`
+	// DirectorID holds the value of the "director_id" field.
+	DirectorID int `json:"director_id,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the MovieQuery when eager-loading is set.
-	Edges           MovieEdges `json:"edges"`
-	director_movies *int
+	Edges MovieEdges `json:"edges"`
 }
 
 // MovieEdges holds the relations/edges for other nodes in the graph.
@@ -67,12 +68,10 @@ func (*Movie) scanValues(columns []string) ([]interface{}, error) {
 	values := make([]interface{}, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case movie.FieldID, movie.FieldRank:
+		case movie.FieldID, movie.FieldRank, movie.FieldDirectorID:
 			values[i] = new(sql.NullInt64)
 		case movie.FieldName, movie.FieldDescription:
 			values[i] = new(sql.NullString)
-		case movie.ForeignKeys[0]: // director_movies
-			values[i] = new(sql.NullInt64)
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type Movie", columns[i])
 		}
@@ -112,12 +111,11 @@ func (m *Movie) assignValues(columns []string, values []interface{}) error {
 			} else if value.Valid {
 				m.Rank = int(value.Int64)
 			}
-		case movie.ForeignKeys[0]:
+		case movie.FieldDirectorID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field director_movies", value)
+				return fmt.Errorf("unexpected type %T for field director_id", values[i])
 			} else if value.Valid {
-				m.director_movies = new(int)
-				*m.director_movies = int(value.Int64)
+				m.DirectorID = int(value.Int64)
 			}
 		}
 	}
@@ -163,6 +161,8 @@ func (m *Movie) String() string {
 	builder.WriteString(m.Description)
 	builder.WriteString(", rank=")
 	builder.WriteString(fmt.Sprintf("%v", m.Rank))
+	builder.WriteString(", director_id=")
+	builder.WriteString(fmt.Sprintf("%v", m.DirectorID))
 	builder.WriteByte(')')
 	return builder.String()
 }

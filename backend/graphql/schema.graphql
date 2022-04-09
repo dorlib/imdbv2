@@ -33,7 +33,7 @@ type Review {
     id: ID!
     text: String!
     rank: Int!
-    movie: Movie! 
+    movie: Movie!
 }
 
 type User {
@@ -70,7 +70,7 @@ input MovieInput {
     description: String!
     name: String!
     rank: Int!
-    parent: ID
+    director_id: Int!
 }
 
 input DirectorInput {

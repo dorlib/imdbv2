@@ -10,7 +10,7 @@ type MovieInput struct {
 	Description string `json:"description"`
 	Name        string `json:"name"`
 	Rank        int    `json:"rank"`
-	Parent      *int   `json:"parent"`
+	DirectorID  int    `json:"director_id"`
 }
 
 type ReviewInput struct {

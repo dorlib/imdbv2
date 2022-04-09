@@ -469,7 +469,7 @@ type Review {
     id: ID!
     text: String!
     rank: Int!
-    movie: Movie! 
+    movie: Movie!
 }
 
 type User {
@@ -506,7 +506,7 @@ input MovieInput {
     description: String!
     name: String!
     rank: Int!
-    parent: ID
+    director_id: Int!
 }
 
 input DirectorInput {
@@ -3114,11 +3114,11 @@ func (ec *executionContext) unmarshalInputMovieInput(ctx context.Context, obj in
 			if err != nil {
 				return it, err
 			}
-		case "parent":
+		case "director_id":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("parent"))
-			it.Parent, err = ec.unmarshalOID2ᚖint(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("director_id"))
+			it.DirectorID, err = ec.unmarshalNInt2int(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4767,22 +4767,6 @@ func (ec *executionContext) marshalODirector2ᚕᚖimdbv2ᚋentᚐDirectorᚄ(ct
 	}
 
 	return ret
-}
-
-func (ec *executionContext) unmarshalOID2ᚖint(ctx context.Context, v interface{}) (*int, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := graphql.UnmarshalIntID(v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalOID2ᚖint(ctx context.Context, sel ast.SelectionSet, v *int) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	res := graphql.MarshalIntID(*v)
-	return res
 }
 
 func (ec *executionContext) marshalOMovie2ᚕᚖimdbv2ᚋentᚐMovieᚄ(ctx context.Context, sel ast.SelectionSet, v []*ent.Movie) graphql.Marshaler {

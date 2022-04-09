@@ -383,7 +383,6 @@ func (dq *DirectorQuery) sqlAll(ctx context.Context) ([]*Director, error) {
 			nodeids[nodes[i].ID] = nodes[i]
 			nodes[i].Edges.Movies = []*Movie{}
 		}
-		query.withFKs = true
 		query.Where(predicate.Movie(func(s *sql.Selector) {
 			s.Where(sql.InValues(director.MoviesColumn, fks...))
 		}))
@@ -392,13 +391,10 @@ func (dq *DirectorQuery) sqlAll(ctx context.Context) ([]*Director, error) {
 			return nil, err
 		}
 		for _, n := range neighbors {
-			fk := n.director_movies
-			if fk == nil {
-				return nil, fmt.Errorf(`foreign-key "director_movies" is nil for node %v`, n.ID)
-			}
-			node, ok := nodeids[*fk]
+			fk := n.DirectorID
+			node, ok := nodeids[fk]
 			if !ok {
-				return nil, fmt.Errorf(`unexpected foreign-key "director_movies" returned %v for node %v`, *fk, n.ID)
+				return nil, fmt.Errorf(`unexpected foreign-key "director_id" returned %v for node %v`, fk, n.ID)
 			}
 			node.Edges.Movies = append(node.Edges.Movies, n)
 		}

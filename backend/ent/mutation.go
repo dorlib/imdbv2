@@ -682,9 +682,53 @@ func (m *MovieMutation) ResetRank() {
 	m.addrank = nil
 }
 
-// SetDirectorID sets the "director" edge to the Director entity by id.
-func (m *MovieMutation) SetDirectorID(id int) {
-	m.director = &id
+// SetDirectorID sets the "director_id" field.
+func (m *MovieMutation) SetDirectorID(i int) {
+	m.director = &i
+}
+
+// DirectorID returns the value of the "director_id" field in the mutation.
+func (m *MovieMutation) DirectorID() (r int, exists bool) {
+	v := m.director
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDirectorID returns the old "director_id" field's value of the Movie entity.
+// If the Movie object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MovieMutation) OldDirectorID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDirectorID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDirectorID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDirectorID: %w", err)
+	}
+	return oldValue.DirectorID, nil
+}
+
+// ClearDirectorID clears the value of the "director_id" field.
+func (m *MovieMutation) ClearDirectorID() {
+	m.director = nil
+	m.clearedFields[movie.FieldDirectorID] = struct{}{}
+}
+
+// DirectorIDCleared returns if the "director_id" field was cleared in this mutation.
+func (m *MovieMutation) DirectorIDCleared() bool {
+	_, ok := m.clearedFields[movie.FieldDirectorID]
+	return ok
+}
+
+// ResetDirectorID resets all changes to the "director_id" field.
+func (m *MovieMutation) ResetDirectorID() {
+	m.director = nil
+	delete(m.clearedFields, movie.FieldDirectorID)
 }
 
 // ClearDirector clears the "director" edge to the Director entity.
@@ -694,15 +738,7 @@ func (m *MovieMutation) ClearDirector() {
 
 // DirectorCleared reports if the "director" edge to the Director entity was cleared.
 func (m *MovieMutation) DirectorCleared() bool {
-	return m.cleareddirector
-}
-
-// DirectorID returns the "director" edge ID in the mutation.
-func (m *MovieMutation) DirectorID() (id int, exists bool) {
-	if m.director != nil {
-		return *m.director, true
-	}
-	return
+	return m.DirectorIDCleared() || m.cleareddirector
 }
 
 // DirectorIDs returns the "director" edge IDs in the mutation.
@@ -794,7 +830,7 @@ func (m *MovieMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *MovieMutation) Fields() []string {
-	fields := make([]string, 0, 3)
+	fields := make([]string, 0, 4)
 	if m.name != nil {
 		fields = append(fields, movie.FieldName)
 	}
@@ -803,6 +839,9 @@ func (m *MovieMutation) Fields() []string {
 	}
 	if m.rank != nil {
 		fields = append(fields, movie.FieldRank)
+	}
+	if m.director != nil {
+		fields = append(fields, movie.FieldDirectorID)
 	}
 	return fields
 }
@@ -818,6 +857,8 @@ func (m *MovieMutation) Field(name string) (ent.Value, bool) {
 		return m.Description()
 	case movie.FieldRank:
 		return m.Rank()
+	case movie.FieldDirectorID:
+		return m.DirectorID()
 	}
 	return nil, false
 }
@@ -833,6 +874,8 @@ func (m *MovieMutation) OldField(ctx context.Context, name string) (ent.Value, e
 		return m.OldDescription(ctx)
 	case movie.FieldRank:
 		return m.OldRank(ctx)
+	case movie.FieldDirectorID:
+		return m.OldDirectorID(ctx)
 	}
 	return nil, fmt.Errorf("unknown Movie field %s", name)
 }
@@ -862,6 +905,13 @@ func (m *MovieMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetRank(v)
+		return nil
+	case movie.FieldDirectorID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDirectorID(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Movie field %s", name)
@@ -907,7 +957,11 @@ func (m *MovieMutation) AddField(name string, value ent.Value) error {
 // ClearedFields returns all nullable fields that were cleared during this
 // mutation.
 func (m *MovieMutation) ClearedFields() []string {
-	return nil
+	var fields []string
+	if m.FieldCleared(movie.FieldDirectorID) {
+		fields = append(fields, movie.FieldDirectorID)
+	}
+	return fields
 }
 
 // FieldCleared returns a boolean indicating if a field with the given name was
@@ -920,6 +974,11 @@ func (m *MovieMutation) FieldCleared(name string) bool {
 // ClearField clears the value of the field with the given name. It returns an
 // error if the field is not defined in the schema.
 func (m *MovieMutation) ClearField(name string) error {
+	switch name {
+	case movie.FieldDirectorID:
+		m.ClearDirectorID()
+		return nil
+	}
 	return fmt.Errorf("unknown Movie nullable field %s", name)
 }
 
@@ -935,6 +994,9 @@ func (m *MovieMutation) ResetField(name string) error {
 		return nil
 	case movie.FieldRank:
 		m.ResetRank()
+		return nil
+	case movie.FieldDirectorID:
+		m.ResetDirectorID()
 		return nil
 	}
 	return fmt.Errorf("unknown Movie field %s", name)

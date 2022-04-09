@@ -12,11 +12,11 @@ import (
 func (r *mutationResolver) CreateMovie(ctx context.Context, movie MovieInput) (*ent.Movie, error) {
 	return r.client.Movie.Create().
 		SetName(movie.Name).
-		SetName(movie.Description).
+		SetDescription(movie.Description).
 		SetRank(movie.Rank).
+		SetDirectorID(movie.DirectorID).
 		Save(ctx)
 }
-
 func (r *mutationResolver) CreateDirector(ctx context.Context, director DirectorInput) (*ent.Director, error) {
 	return r.client.Director.Create().
 		SetName(director.Name).

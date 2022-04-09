@@ -113,6 +113,13 @@ func Rank(v int) predicate.Movie {
 	})
 }
 
+// DirectorID applies equality check predicate on the "director_id" field. It's identical to DirectorIDEQ.
+func DirectorID(v int) predicate.Movie {
+	return predicate.Movie(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldDirectorID), v))
+	})
+}
+
 // NameEQ applies the EQ predicate on the "name" field.
 func NameEQ(v string) predicate.Movie {
 	return predicate.Movie(func(s *sql.Selector) {
@@ -408,6 +415,68 @@ func RankLT(v int) predicate.Movie {
 func RankLTE(v int) predicate.Movie {
 	return predicate.Movie(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldRank), v))
+	})
+}
+
+// DirectorIDEQ applies the EQ predicate on the "director_id" field.
+func DirectorIDEQ(v int) predicate.Movie {
+	return predicate.Movie(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldDirectorID), v))
+	})
+}
+
+// DirectorIDNEQ applies the NEQ predicate on the "director_id" field.
+func DirectorIDNEQ(v int) predicate.Movie {
+	return predicate.Movie(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldDirectorID), v))
+	})
+}
+
+// DirectorIDIn applies the In predicate on the "director_id" field.
+func DirectorIDIn(vs ...int) predicate.Movie {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Movie(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldDirectorID), v...))
+	})
+}
+
+// DirectorIDNotIn applies the NotIn predicate on the "director_id" field.
+func DirectorIDNotIn(vs ...int) predicate.Movie {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Movie(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldDirectorID), v...))
+	})
+}
+
+// DirectorIDIsNil applies the IsNil predicate on the "director_id" field.
+func DirectorIDIsNil() predicate.Movie {
+	return predicate.Movie(func(s *sql.Selector) {
+		s.Where(sql.IsNull(s.C(FieldDirectorID)))
+	})
+}
+
+// DirectorIDNotNil applies the NotNil predicate on the "director_id" field.
+func DirectorIDNotNil() predicate.Movie {
+	return predicate.Movie(func(s *sql.Selector) {
+		s.Where(sql.NotNull(s.C(FieldDirectorID)))
 	})
 }
 

@@ -30,7 +30,6 @@ type MovieQuery struct {
 	// eager-loading edges.
 	withDirector *DirectorQuery
 	withReviews  *ReviewQuery
-	withFKs      bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -387,19 +386,12 @@ func (mq *MovieQuery) prepareQuery(ctx context.Context) error {
 func (mq *MovieQuery) sqlAll(ctx context.Context) ([]*Movie, error) {
 	var (
 		nodes       = []*Movie{}
-		withFKs     = mq.withFKs
 		_spec       = mq.querySpec()
 		loadedTypes = [2]bool{
 			mq.withDirector != nil,
 			mq.withReviews != nil,
 		}
 	)
-	if mq.withDirector != nil {
-		withFKs = true
-	}
-	if withFKs {
-		_spec.Node.Columns = append(_spec.Node.Columns, movie.ForeignKeys...)
-	}
 	_spec.ScanValues = func(columns []string) ([]interface{}, error) {
 		node := &Movie{config: mq.config}
 		nodes = append(nodes, node)
@@ -424,10 +416,7 @@ func (mq *MovieQuery) sqlAll(ctx context.Context) ([]*Movie, error) {
 		ids := make([]int, 0, len(nodes))
 		nodeids := make(map[int][]*Movie)
 		for i := range nodes {
-			if nodes[i].director_movies == nil {
-				continue
-			}
-			fk := *nodes[i].director_movies
+			fk := nodes[i].DirectorID
 			if _, ok := nodeids[fk]; !ok {
 				ids = append(ids, fk)
 			}
@@ -441,7 +430,7 @@ func (mq *MovieQuery) sqlAll(ctx context.Context) ([]*Movie, error) {
 		for _, n := range neighbors {
 			nodes, ok := nodeids[n.ID]
 			if !ok {
-				return nil, fmt.Errorf(`unexpected foreign-key "director_movies" returned %v`, n.ID)
+				return nil, fmt.Errorf(`unexpected foreign-key "director_id" returned %v`, n.ID)
 			}
 			for i := range nodes {
 				nodes[i].Edges.Director = n

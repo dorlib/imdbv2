@@ -36,10 +36,11 @@ func main() {
 	srv := handler.NewDefaultServer(graphql.NewSchema(client))
 	srv.Use(entgql.Transactioner{TxOpener: client})
 
-	http.Handle("/",
+	http.Handle("/playground",
 		playground.Handler("Movie", "/query"),
 	)
 	http.Handle("/query", srv)
+	http.Handle("/", http.FileServer(http.Dir("/App.js")))
 
 	log.Println("listening on", "localhost:8081")
 	if err := http.ListenAndServe("localhost:8081", nil); err != nil {

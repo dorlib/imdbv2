@@ -25,7 +25,7 @@ var (
 		{Name: "name", Type: field.TypeString, Unique: true},
 		{Name: "description", Type: field.TypeString},
 		{Name: "rank", Type: field.TypeInt},
-		{Name: "director_movies", Type: field.TypeInt, Nullable: true},
+		{Name: "director_id", Type: field.TypeInt, Nullable: true},
 	}
 	// MoviesTable holds the schema information for the "movies" table.
 	MoviesTable = &schema.Table{
