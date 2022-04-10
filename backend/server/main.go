@@ -40,7 +40,6 @@ func main() {
 		playground.Handler("Movie", "/query"),
 	)
 	http.Handle("/query", srv)
-	http.Handle("/", http.FileServer(http.Dir("/App.js")))
 
 	log.Println("listening on", "localhost:8081")
 	if err := http.ListenAndServe("localhost:8081", nil); err != nil {
