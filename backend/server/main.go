@@ -5,6 +5,8 @@ import (
 	"entgo.io/contrib/entgql"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/go-chi/chi"
+	"github.com/rs/cors"
 	"imdbv2/ent"
 	"imdbv2/ent/migrate"
 	"imdbv2/graphql"
@@ -15,6 +17,15 @@ import (
 )
 
 func main() {
+	router := chi.NewRouter()
+
+	// Add CORS middleware around every request
+	// See https://github.com/rs/cors for full option listing
+	router.Use(cors.New(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:3000"},
+		AllowCredentials: true,
+		Debug:            true,
+	}).Handler)
 	// Create an ent.Client with in-memory SQLite database.
 	client, err := ent.Open("mysql", "root:pass@tcp(127.0.0.1:3306)/test")
 	if err != nil {
@@ -36,13 +47,13 @@ func main() {
 	srv := handler.NewDefaultServer(graphql.NewSchema(client))
 	srv.Use(entgql.Transactioner{TxOpener: client})
 
-	http.Handle("/playground",
+	router.Handle("/query", srv)
+	router.Handle("/playground",
 		playground.Handler("Movie", "/query"),
 	)
-	http.Handle("/query", srv)
 
 	log.Println("listening on", "localhost:8081")
-	if err := http.ListenAndServe("localhost:8081", nil); err != nil {
+	if err := http.ListenAndServe("localhost:8081", router); err != nil {
 		log.Fatalf("error running server (%s)", err)
 	}
 }
